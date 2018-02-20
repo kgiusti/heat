@@ -20,8 +20,11 @@ from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils
 from osprofiler import profiler
 
+from oslo_log import log as logging
+
 from heat.common import context
 
+LOG = logging.getLogger(__name__)
 
 TRANSPORT = None
 NOTIFICATIONS_TRANSPORT = None
@@ -72,17 +75,29 @@ class JsonPayloadSerializer(oslo_messaging.NoOpSerializer):
 def get_specific_transport(url, optional, exmods, is_for_notifications=False):
     try:
         if is_for_notifications:
-            return oslo_messaging.get_notification_transport(
+            LOG.warning("KAG: get spec noti url=%s", url)
+            ttt = oslo_messaging.get_notification_transport(
                 cfg.CONF, url, allowed_remote_exmods=exmods)
+            if hasattr(ttt, "_driver") and hasattr(ttt._driver,
+                                                   "_url"):
+                LOG.warning("KAG: transport URL=%s", str(ttt._driver._url))
+            return ttt
         else:
-            return oslo_messaging.get_rpc_transport(
+            LOG.warning("KAG: get spec rpc url=%s", url)
+            ttt = oslo_messaging.get_rpc_transport(
                 cfg.CONF, url, allowed_remote_exmods=exmods)
+            if hasattr(ttt, "_driver") and hasattr(ttt._driver,
+                                                   "_url"):
+                LOG.warning("KAG: transport URL=%s", str(ttt._driver._url))
+            return ttt
+
     except oslo_messaging.InvalidTransportURL as e:
         if not optional or e.url:
             # NOTE(sileht): oslo_messaging is configured but unloadable
             # so reraise the exception
             raise
         else:
+            LOG.warning("KAG: get spec return NONE")
             return None
 
 
@@ -130,6 +145,7 @@ def get_rpc_server(target, endpoint):
     """Return a configured oslo_messaging rpc server."""
     serializer = RequestContextSerializer(JsonPayloadSerializer())
     access_policy = dispatcher.DefaultRPCAccessPolicy
+    LOG.warning("KAG: get rpc server target=%s", str(target))
     return oslo_messaging.get_rpc_server(TRANSPORT, target, [endpoint],
                                          executor='eventlet',
                                          serializer=serializer,
@@ -139,6 +155,7 @@ def get_rpc_server(target, endpoint):
 def get_rpc_client(**kwargs):
     """Return a configured oslo_messaging RPCClient."""
     target = oslo_messaging.Target(**kwargs)
+    LOG.warning("KAG: get rpc client target=%s", str(target))
     serializer = RequestContextSerializer(JsonPayloadSerializer())
     return oslo_messaging.RPCClient(TRANSPORT, target,
                                     serializer=serializer)

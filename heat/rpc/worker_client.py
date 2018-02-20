@@ -18,6 +18,8 @@
 from heat.common import messaging
 from heat.rpc import worker_api
 
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
 
 class WorkerClient(object):
     """Client side of the heat worker RPC API.
@@ -48,6 +50,7 @@ class WorkerClient(object):
             client = self._client.prepare(version=version)
         else:
             client = self._client
+        LOG.warning("KAG: CAST method %s", str(method))
         client.cast(ctxt, method, **kwargs)
 
     def check_resource(self, ctxt, resource_id,
@@ -76,4 +79,5 @@ class WorkerClient(object):
         method, kwargs = self.make_msg('cancel_check_resource',
                                        stack_id=stack_id)
         cl = _client.prepare(version='1.3')
+        LOG.warning("KAG: CAST method3 %s", str(method))
         cl.cast(ctxt, method, **kwargs)

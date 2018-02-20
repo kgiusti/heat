@@ -16,8 +16,11 @@ from oslo_messaging._drivers import common
 from oslo_messaging import transport
 import requests
 
+from oslo_log import log as logging
+
 from heat_integrationtests.common import test
 from heat_integrationtests.functional import functional_base
+LOG = logging.getLogger(__name__)
 
 BASIC_NOTIFICATIONS = [
     'orchestration.stack.create.start',
@@ -40,6 +43,7 @@ ASG_NOTIFICATIONS = [
 
 def get_url(conf):
     conf = conf.oslo_messaging_rabbit
+    LOG.error("KAG: hardcoding rabbit???")
     return 'amqp://%s:%s@%s:%s/' % (conf.rabbit_userid,
                                     conf.rabbit_password,
                                     conf.rabbit_host,
@@ -128,8 +132,13 @@ outputs:
         queue = kombu.Queue(exchange=self.exchange,
                             routing_key='notifications.info',
                             exclusive=True)
-        self.conn = kombu.Connection(get_url(
-            transport.get_transport(cfg.CONF).conf))
+
+        ttt = transport.get_transport(cfg.CONF)
+        if hasattr(ttt, "_driver") and hasattr(ttt._driver,
+                                               "_url"):
+            LOG.warning("KAG: Kombu transport URL=%s", str(ttt._driver._url))
+
+        self.conn = kombu.Connection(get_url(ttt.conf))
         self.ch = self.conn.channel()
         self.queue = queue(self.ch)
         self.queue.declare()

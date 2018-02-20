@@ -1357,8 +1357,11 @@ class EngineService(service.ServiceBase):
             topic=rpc_api.LISTENER_TOPIC,
             server=lock_engine_id)
         try:
+            LOG.warning("KAG: calling %s", call)
             self.cctxt.call(cnxt, call, **kwargs)
+            LOG.warning("KAG: called %s", call)
         except messaging.MessagingTimeout:
+            LOG.error("KAG: failed %s", call)
             return False
 
     @context.request_context

@@ -23,6 +23,10 @@ from oslo_utils import reflection
 from heat.common import messaging
 from heat.rpc import api as rpc_api
 
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
+
+
 
 class EngineClient(object):
     """Client side of the heat engine rpc API.
@@ -85,7 +89,14 @@ class EngineClient(object):
         if timeout is not None:
             client = client.prepare(timeout=timeout)
 
-        return client.call(ctxt, method, **kwargs)
+        LOG.warning("KAG: calling %s", method)
+        try:
+            xxx = client.call(ctxt, method, **kwargs)
+        except Exception as e:
+            LOG.error("KAG: CALL FAILED %s", str(e))
+            raise
+
+        return xxx
 
     def cast(self, ctxt, msg, version=None):
         method, kwargs = msg
@@ -93,7 +104,12 @@ class EngineClient(object):
             client = self._client.prepare(version=version)
         else:
             client = self._client
-        return client.cast(ctxt, method, **kwargs)
+        LOG.warning("KAG: casting %s", method)
+        try:
+            xxx = client.cast(ctxt, method, **kwargs)
+        except Exception as e:
+            LOG.error("KAG: CAST FAILED %s", str(e))
+        return xxx
 
     def local_error_name(self, error):
         """Returns the name of the error with any _Remote postfix removed.

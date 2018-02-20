@@ -23,6 +23,11 @@ from heat.rpc import api as rpc_api
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 
 
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
+
+
+
 class EngineListenerClient(object):
     """Client side of the heat listener RPC API.
 
@@ -43,6 +48,9 @@ class EngineListenerClient(object):
 
     def is_alive(self, ctxt):
         try:
+
+            LOG.warning("KAG: call listening...")
             return self._client.call(ctxt, 'listening')
         except messaging.MessagingTimeout:
+            LOG.error("KAG: timed out!")
             return False
