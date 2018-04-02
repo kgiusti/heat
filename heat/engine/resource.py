@@ -576,6 +576,13 @@ class Resource(status.ResourceStatus):
         """
         return False
 
+    def get_nested_parameters_stack(self):
+        """Return the nested stack for schema validation.
+
+        Regular resources don't have such a thing.
+        """
+        return
+
     def has_hook(self, hook):
         # Clear the cache to make sure the data is up to date:
         self._data = None
@@ -1600,6 +1607,8 @@ class Resource(status.ResourceStatus):
             raise exception.ResourceFailure(exc, self, action)
         elif after_external_id is not None:
             LOG.debug("Skip update on external resource.")
+            if update_templ_func is not None:
+                update_templ_func(persist=True)
             return
 
         after_props, before_props = self._prepare_update_props(after, before)

@@ -63,8 +63,7 @@ function _config_functionaltests
     _config_iniset $conf_file
 
     # Skip NotificationTest till bug #1721202 is fixed
-    # Skip StackCancelTest till the python-heatclient is bumped
-    iniset $conf_file heat_plugin skip_functional_test_list 'NotificationTest, StackCancelTest'
+    iniset $conf_file heat_plugin skip_functional_test_list 'NotificationTest'
 
     cat $conf_file
 }
@@ -88,5 +87,5 @@ function _config_tempest_plugin
 _config_functionaltests
 _config_tempest_plugin
 
-openstack flavor create m1.heat_int --ram 512
-openstack flavor create m1.heat_micro --ram 128
+openstack flavor show m1.heat_int || openstack flavor create m1.heat_int --ram 512
+openstack flavor show m1.heat_micro || openstack flavor create m1.heat_micro --ram 128

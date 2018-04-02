@@ -620,6 +620,8 @@ resources:
         # Fixing the template should fix the stack
         template = _change_rsrc_properties(template,
                                            ['test1'], {'fail': False})
+        template['resources']['test2'][
+            'properties'] = {'action_wait_secs': {'update': 1}}
         self.update_stack(stack_identifier,
                           template=template,
                           environment=env)
@@ -649,6 +651,8 @@ resources:
 
         template = _change_rsrc_properties(template,
                                            ['test2'], {'value': 'Test2'})
+        template['resources']['test1'][
+            'properties']['action_wait_secs'] = {'create': 1}
         self.update_stack(stack_identifier,
                           template=template,
                           expected_status='UPDATE_FAILED')
@@ -701,7 +705,11 @@ resources:
                           expected_status='UPDATE_IN_PROGRESS')
 
         def check_resources():
-            resources = self.list_resources(stack_identifier)
+            def is_complete(r):
+                return r.resource_status in {'CREATE_COMPLETE',
+                                             'UPDATE_COMPLETE'}
+
+            resources = self.list_resources(stack_identifier, is_complete)
             if len(resources) < 2:
                 return False
             self.assertIn('test3', resources)
